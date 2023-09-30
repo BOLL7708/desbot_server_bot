@@ -1,12 +1,13 @@
 import sqlite3 from 'sqlite3'
 import {Database, open} from 'sqlite'
 import fs from 'fs/promises'
+import {IConfig} from './Config.js'
 
 /**
  * Class that handles database operations.
  */
 export default class DB {
-    constructor() {
+    constructor(private _config: IConfig) {
         const dir = './db'
         fs.access(dir)
             .then(() => console.log('DB directory exists'))
@@ -25,9 +26,11 @@ export default class DB {
                 filename: './db/server_bot.db',
                 driver: sqlite3.Database
             })
-            this._db.on('trace', (data) => {
-                console.log('SQL Trace:', data)
-            })
+            if (this._config.traceDatabaseQueries) {
+                this._db.on('trace', (data) => {
+                    console.log('SQL Trace:', data)
+                })
+            }
         }
         return this._db
     }

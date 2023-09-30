@@ -3,5 +3,8 @@
   "clientSecret": "",
   "token": "",
   "serverId": "",
-  "serverIconChannelId": ""
+  "serverIconChannelId": "",
+  "serverIconInterval": "0 0 0 * * *",
+  "logChannelId": "",
+  "traceDatabaseQueries": false
 }
