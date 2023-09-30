@@ -1,0 +1,10 @@
+{
+  "name": "desbot_server_bot",
+  "version": "0.0.1",
+  "description": "a discord bot for the official desbot discord server",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "discord.js": "^14.13.0"
+  }
+}
