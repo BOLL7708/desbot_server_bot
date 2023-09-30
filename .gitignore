@@ -1,6 +1,7 @@
 node_modules
 .idea
 *.local.*
-images/icons
+images
 dist
 package-lock.json
+db
