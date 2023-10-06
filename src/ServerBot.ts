@@ -22,9 +22,21 @@ export default class ServerBot {
         const serverIconJob = new CronJob(
             this._config.serverIconInterval, // second, minute, hour, day of month, month, day of week
             () => {
-                console.log('Cron job running.')
-                Tasks.logMessage(this._config, client, 'Setting server icon.')
+                const message = 'Setting server icon.'
+                Tasks.logMessage(this._config, client, message)
                 Tasks.setServerIcon(this._config, this._db, client)
+            },
+            null,
+            false
+        )
+
+        // Load Reddit RSS feed
+        const redditRSSJob = new CronJob(
+            '0 */10 * * * *',
+            ()=>{
+                const message = 'Posting new Reddit thread.'
+                Tasks.logMessage(this._config, client, message)
+                Tasks.loadRedditRSS(this._config, this._db)
             },
             null,
             false
@@ -36,6 +48,7 @@ export default class ServerBot {
             console.log(`Ready! Logged in as ${c.user.tag}`)
             Tasks.logMessage(this._config, client, 'Bot connected.')
             serverIconJob.start()
+            redditRSSJob.start()
         })
 
         // Log in to Discord with your client's token

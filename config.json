@@ -6,5 +6,7 @@
   "serverIconChannelId": "",
   "serverIconInterval": "0 0 0 * * *",
   "logChannelId": "",
-  "traceDatabaseQueries": false
+  "traceDatabaseQueries": false,
+  "redditRss": "",
+  "redditWebhook": ""
 }

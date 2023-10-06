@@ -1,7 +1,8 @@
-import {AttachmentBuilder, Client, ForumChannel, TextChannel, ThreadAutoArchiveDuration} from 'discord.js'
+import {AttachmentBuilder, Client, ForumChannel, TextChannel, ThreadAutoArchiveDuration, APIEmbed, APIEmbedImage, APIEmbedThumbnail, APIEmbedAuthor, WebhookClient} from 'discord.js'
 import fs from 'fs/promises'
 import DB from './DB.js'
 import {IConfig} from './Config.js'
+import Parser from 'rss-parser'
 
 export default class Tasks {
     /**
@@ -11,6 +12,7 @@ export default class Tasks {
      * @param message
      */
     static async logMessage(config: IConfig, client: Client, message: string) {
+        console.log(`Log: ${message}`)
         const channel = client.channels.cache.get(config.logChannelId) as TextChannel
         if (channel) await channel.send({content: message})
         else console.error('Failed to find log channel.')
@@ -26,9 +28,11 @@ export default class Tasks {
         // Load image files
         const path = './images/icons'
         const files = await fs.readdir(path)
+        const countFiles = files.length
 
         // Load which files have already been used and remove them from the pool
         const existingIcons = await db.getAllServerIcons()
+        const countUsedFiles = existingIcons.length
         for (const existingIcon of existingIcons) {
             const index = files.indexOf(existingIcon)
             if (index > -1) files.splice(index, 1)
@@ -59,6 +63,7 @@ export default class Tasks {
                 autoArchiveDuration: ThreadAutoArchiveDuration.OneHour,
                 reason: 'Daily server icon update.',
                 message: {
+                    content: `#${countUsedFiles + 1} out of ${countFiles} possible variants.`,
                     files: [attachment]
                 }
             })
@@ -68,4 +73,55 @@ export default class Tasks {
         // Register in DB
         await db.registerServerIcon(file, dateStr)
     }
+
+    /**
+     * Load RSS and post new entries.
+     */
+    static async loadRedditRSS(config: IConfig, db: DB) {
+        if (config.redditRss && config.redditWebhook) {
+            const parser = new Parser<TCustomFeed, TCustomItem>({
+                customFields: {
+                    feed: ['icon'],
+                    item: ['author', 'id']
+                }
+            })
+            const feed = await parser.parseURL(config.redditRss)
+            const webhookClient = new WebhookClient({url: config.redditWebhook})
+
+            if (webhookClient) {
+                for (const item of feed.items) {
+                    // Check if already exists
+                    const alreadyExists = await db.doesRedditPostExist(item.id)
+                    if (alreadyExists) continue
+                    else await db.registerRedditPost(item.id)
+
+                    // Post to webhook
+                    const url = item.link
+                    const description = item.contentSnippet.split('\n')[0] ?? ''
+                    if (url) {
+                        const embed: APIEmbed = {
+                            title: item.title,
+                            url,
+                            description,
+                            timestamp: item.isoDate,
+                        }
+                        let iconUrl = feed.icon
+                        if (iconUrl.charAt(iconUrl.length - 1) == '/') iconUrl = iconUrl.substring(0, iconUrl.length - 1)
+                        await webhookClient.send({
+                            avatarURL: iconUrl,
+                            username: item.author,
+                            embeds: [embed]
+                        })
+                    }
+                }
+            }
+        }
+    }
+}
+type TCustomFeed = {
+    icon: string
+}
+type TCustomItem = {
+    author: string
+    id: string
 }

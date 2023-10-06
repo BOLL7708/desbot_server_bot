@@ -31,4 +31,6 @@ export interface IConfig {
     serverIconInterval: string
     logChannelId: string
     traceDatabaseQueries: boolean
+    redditRss: string
+    redditWebhook: string
 }

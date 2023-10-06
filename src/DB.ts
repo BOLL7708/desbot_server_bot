@@ -35,6 +35,7 @@ export default class DB {
         return this._db
     }
 
+    // region Server Icons
     private async ensureServerIconTable() {
         const db = await this.getDb()
         await db.exec('CREATE TABLE IF NOT EXISTS server_icons (id INTEGER PRIMARY KEY, file TEXT, date TEXT)')
@@ -68,4 +69,33 @@ export default class DB {
         }
         return []
     }
+    // endregion
+
+    // region Reddit Posts
+    private async ensureRedditPostsTable() {
+        const db = await this.getDb()
+        await db.exec('CREATE TABLE IF NOT EXISTS reddit_posts (id INTEGER PRIMARY KEY, post_id TEXT)')
+    }
+
+    async registerRedditPost(postId: string) {
+        const db = await this.getDb()
+        if (db) {
+            await this.ensureRedditPostsTable()
+            const stmt = await db.prepare('INSERT INTO reddit_posts (post_id) VALUES (?)')
+            const result = await stmt.run(postId)
+            if (result.lastID) return true
+        }
+        return false
+    }
+
+    async doesRedditPostExist(postId: string): Promise<boolean> {
+        const db = await this.getDb()
+        if (db) {
+            await this.ensureRedditPostsTable()
+            const result = await db.get('SELECT * FROM reddit_posts WHERE post_id = ?', postId)
+            return !!result
+        }
+        return false
+    }
+    // endregion
 }
