@@ -32,11 +32,11 @@ export default class ServerBot {
 
         // Load Reddit RSS feed
         const redditRSSJob = new CronJob(
-            '0 */10 * * * *',
-            ()=>{
+            this._config.redditPollInterval,
+            async ()=>{
                 const message = 'Posting new Reddit thread.'
-                Tasks.logMessage(this._config, client, message)
-                Tasks.loadRedditRSS(this._config, this._db)
+                const result = await Tasks.loadRedditRSS(this._config, this._db)
+                if(result) await Tasks.logMessage(this._config, client, message)
             },
             null,
             false

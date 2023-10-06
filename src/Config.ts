@@ -33,4 +33,5 @@ export interface IConfig {
     traceDatabaseQueries: boolean
     redditRss: string
     redditWebhook: string
+    redditPollInterval: string
 }

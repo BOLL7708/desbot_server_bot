@@ -77,7 +77,7 @@ export default class Tasks {
     /**
      * Load RSS and post new entries.
      */
-    static async loadRedditRSS(config: IConfig, db: DB) {
+    static async loadRedditRSS(config: IConfig, db: DB): Promise<boolean> {
         if (config.redditRss && config.redditWebhook) {
             const parser = new Parser<TCustomFeed, TCustomItem>({
                 customFields: {
@@ -86,7 +86,12 @@ export default class Tasks {
                 }
             })
             const feed = await parser.parseURL(config.redditRss)
-            const webhookClient = new WebhookClient({url: config.redditWebhook})
+            let webhookClient: WebhookClient
+            try {
+                webhookClient = new WebhookClient({url: config.redditWebhook})
+            } catch (e) {
+                console.error('Could not initiate the WebhookClient', e)
+            }
 
             if (webhookClient) {
                 for (const item of feed.items) {
@@ -107,15 +112,17 @@ export default class Tasks {
                         }
                         let iconUrl = feed.icon
                         if (iconUrl.charAt(iconUrl.length - 1) == '/') iconUrl = iconUrl.substring(0, iconUrl.length - 1)
-                        await webhookClient.send({
+                        const result = await webhookClient.send({
                             avatarURL: iconUrl,
                             username: item.author,
                             embeds: [embed]
                         })
+                        return !!result // TODO: Unclear what a failure looks like so here we go
                     }
                 }
             }
         }
+        return false
     }
 }
 type TCustomFeed = {

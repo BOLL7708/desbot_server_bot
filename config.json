@@ -8,5 +8,6 @@
   "logChannelId": "",
   "traceDatabaseQueries": false,
   "redditRss": "",
-  "redditWebhook": ""
+  "redditWebhook": "",
+  "redditPollInterval": "0 */10 * * * *"
 }
