@@ -53,7 +53,7 @@ export default class Tasks {
 
         // Post server icon to forum channel
         let date = new Date()
-        date = new Date(date.getTime() + (date.getTimezoneOffset() * 60 * 1000))
+        date = new Date(date.getTime() - (date.getTimezoneOffset() * 60 * 1000))
         const dateStr = date.toISOString().substring(0, 10)
         const attachment = new AttachmentBuilder(filePath, {name: 'server-icon.png'})
         const channel = client.channels.cache.get(config.serverIconChannelId) as ForumChannel
